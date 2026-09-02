@@ -102,7 +102,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   <div class="main">
     <div class="stage">
       <div class="canvas-hold"><canvas id="cv"></canvas></div>
-      <p class="hint">اسحب الصورة بالماوس عشان تحركها · عجلة الماوس للزوم · دوس على أي فتحة عشان تختارها</p>
+      <p class="hint" id="hint">اسحب الصورة بالماوس عشان تحركها · عجلة الماوس للزوم · دوس على أي فتحة عشان تختارها</p>
       <div id="saveBox">
         <div class="sb-head">
           <b>الصورة جاهزة</b>
@@ -670,8 +670,20 @@ const paint = ()=> render(cv, false);
 /* الكانفاس بياخد جستشر اللمس بالكامل (touch-action:none) عشان السحب يحرّك
    الصورة. لكن وهو فاضي مفيش حاجة تتسحب، فكان بيبلع الاسكرول على الموبايل
    من غير أي فايدة — والكانفاس ممكن يوصل لـ 72vh، فالصفحة كانت بتقف عنده. */
+/* بتتنادى مع كل تغيير في الحالة، فبتظبط التلميح كمان.
+   على اللمس الصباع الواحد ينفع يعمل حاجة واحدة — يا يحرّك الصورة يا يعمل
+   اسكرول. الكانفاس بياخده وهو فيه صورة بس، وساعتها التلميح بيقول للمستخدم
+   يعمل الاسكرول من جنب الفريم بدل ما يفتكر الصفحة واقفة. */
+const HINT_MOUSE = 'اسحب الصورة بالماوس عشان تحركها · عجلة الماوس للزوم · دوس على أي فتحة عشان تختارها';
+const HINT_TOUCH = 'اسحب الصورة عشان تحركها · دوس على أي فتحة عشان تختارها';
+const HINT_TOUCH_LOADED = 'اسحب الصورة عشان تحركها · للاسكرول اسحب من جنب الفريم';
 function syncCanvasTouch(){
-  cv.style.touchAction = state.some(Boolean) ? 'none' : 'pan-y';
+  const loaded = state.some(Boolean);
+  cv.style.touchAction = loaded ? 'none' : 'pan-y';
+  const h = document.getElementById('hint');
+  if(!h) return;
+  h.textContent = !matchMedia('(pointer:coarse)').matches ? HINT_MOUSE
+                : loaded ? HINT_TOUCH_LOADED : HINT_TOUCH;
 }
 
 function setMeta(){
