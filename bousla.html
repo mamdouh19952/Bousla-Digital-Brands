@@ -53,8 +53,8 @@ canvas.drag{cursor:grabbing}
   color:var(--muted);font-size:13px;cursor:pointer;transition:.15s;line-height:1.6}
 .drop:hover,.drop.over{border-color:var(--accent);color:var(--accent);background:var(--surface-2)}
 .drop b{display:block;color:var(--ink);font-size:14px;margin-bottom:3px}
-.row{display:flex;gap:7px}
-.btn{flex:1;background:var(--surface-2);border:1px solid var(--line);border-radius:3px;
+.row{display:flex;flex-wrap:wrap;gap:7px}
+.btn{flex:1 1 calc(50% - 4px);background:var(--surface-2);border:1px solid var(--line);border-radius:3px;
   padding:9px 8px;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--ink);
   cursor:pointer;transition:.15s}
 .btn:hover{border-color:var(--accent);color:var(--accent)}
@@ -909,22 +909,28 @@ function exportAs(type, ext, quality){
                new Date().toISOString().slice(0,10) + '.' + ext;
   off.toBlob(async blob=>{
     if(!blob) return;
+    const touch = matchMedia('(pointer:coarse)').matches;
+    /* أجهزة اللمس: اعرض صندوق المعاينة المضمون فورًا — نافذة المشاركة
+       ممكن متديش خيار "حفظ للجهاز" فعلي (بعض أندرويد)، فمينفعش نعتمد
+       عليها لوحدها ولا نعمل return بعد نجاحها. */
+    if(touch) showSaveBox(URL.createObjectURL(blob), name);
     try{
       const file = new File([blob], name, { type });
       if(navigator.canShare && navigator.canShare({ files:[file] })){
-        await navigator.share({ files:[file] }); return;
+        await navigator.share({ files:[file] });
       }
-    }catch(e){ if(e && e.name === 'AbortError') return; }
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = name; a.rel = 'noopener';
-    document.body.appendChild(a);
-    let ok = true;
-    try { a.click(); } catch(e){ ok = false; }
-    a.remove();
-    const touch = matchMedia('(pointer:coarse)').matches;
-    if(!ok || touch) showSaveBox(url, name);
-    else setTimeout(()=>URL.revokeObjectURL(url), 8000);
+    }catch(e){ /* المستخدم قفل نافذة المشاركة أو رفضها — صندوق المعاينة لسه ظاهر */ }
+    if(!touch){
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = name; a.rel = 'noopener';
+      document.body.appendChild(a);
+      let ok = true;
+      try { a.click(); } catch(e){ ok = false; }
+      a.remove();
+      if(!ok) showSaveBox(url, name);
+      else setTimeout(()=>URL.revokeObjectURL(url), 8000);
+    }
   }, type, quality);
 }
 function showSaveBox(url, name){
