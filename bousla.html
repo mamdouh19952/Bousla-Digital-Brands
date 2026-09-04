@@ -937,12 +937,14 @@ function exportAs(type, ext, quality){
        ممكن متديش خيار "حفظ للجهاز" فعلي (بعض أندرويد)، فمينفعش نعتمد
        عليها لوحدها ولا نعمل return بعد نجاحها. */
     if(touch) showSaveBox(URL.createObjectURL(blob), name);
-    try{
-      const file = new File([blob], name, { type });
-      if(navigator.canShare && navigator.canShare({ files:[file] })){
-        await navigator.share({ files:[file] });
-      }
-    }catch(e){ /* المستخدم قفل نافذة المشاركة أو رفضها — صندوق المعاينة لسه ظاهر */ }
+    if(touch){
+      try{
+        const file = new File([blob], name, { type });
+        if(navigator.canShare && navigator.canShare({ files:[file] })){
+          await navigator.share({ files:[file] });
+        }
+      }catch(e){ /* المستخدم قفل نافذة المشاركة أو رفضها — صندوق المعاينة لسه ظاهر */ }
+    }
     if(!touch){
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
